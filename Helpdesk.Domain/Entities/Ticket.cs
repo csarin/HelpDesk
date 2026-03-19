@@ -13,14 +13,15 @@ namespace Helpdesk.Domain.Entities
         public TicketStatus Status { get; set; } = TicketStatus.Open;
         public TicketPriority Priority { get; set; } = TicketPriority.Medium;
         public int? CategoryId { get; set; }
-        public string CreatedByUserId { get; set; } = string.Empty;
+        public required string CreatedByUserId { get; set; }
         public string? AssignedToUserId { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset? UpdatedAt { get; set; }
         public DateTimeOffset? ClosedAt { get; set; }
 
         public Category? Category { get; set; }
         public required ApplicationUser CreatedByUser { get; set; }
+        public ApplicationUser? AssignedToUser { get; set; }
         public ICollection<TicketComment> Comments { get; set; } = new List<TicketComment>();
     }
 }
