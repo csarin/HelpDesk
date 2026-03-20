@@ -1,4 +1,4 @@
-using Helpdesk.Domain.Entities;
+using Helpdesk.Infrastructure.Identity;
 using Helpdesk.Infrastructure.Persistence;
 using HelpDesk.Web;
 using Microsoft.AspNetCore.Identity;

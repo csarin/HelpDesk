@@ -1,4 +1,5 @@
 using Helpdesk.Domain.Entities;
+using Helpdesk.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -39,13 +40,13 @@ namespace Helpdesk.Infrastructure.Persistence
                 entity.Property(t => t.Priority)
                       .IsRequired();
 
-                entity.HasOne(t => t.CreatedByUser)
+                entity.HasOne<ApplicationUser>()
                       .WithMany()
                       .HasForeignKey(t => t.CreatedByUserId)
                       .IsRequired()
                       .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(t => t.AssignedToUser)
+                entity.HasOne<ApplicationUser>()
                       .WithMany()
                       .HasForeignKey(t => t.AssignedToUserId)
                       .OnDelete(DeleteBehavior.Restrict);
@@ -78,7 +79,7 @@ namespace Helpdesk.Infrastructure.Persistence
                 entity.Property(c => c.IsInternal)
                       .IsRequired();
 
-                entity.HasOne(c => c.AuthorUser)
+                entity.HasOne<ApplicationUser>()
                       .WithMany()
                       .HasForeignKey(c => c.AuthorUserId)
                       .IsRequired()

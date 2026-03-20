@@ -19,16 +19,13 @@ namespace Helpdesk.Domain.Entities
         public DateTimeOffset? UpdatedAt { get; private set; }
         public DateTimeOffset? ClosedAt { get; private set; }
         public Category? Category { get; set; }
-        public required ApplicationUser CreatedByUser { get; set; }
-        public ApplicationUser? AssignedToUser { get; private set; }
 
         private readonly List<TicketComment> _comments = new();
         public IReadOnlyCollection<TicketComment> Comments => _comments.AsReadOnly();
 
-        public void AssignTo(string? userId, ApplicationUser? user = null)
+        public void AssignTo(string? userId)
         {
             AssignedToUserId = userId;
-            AssignedToUser = user;
             UpdatedAt = DateTimeOffset.UtcNow;
         }
 
@@ -61,7 +58,7 @@ namespace Helpdesk.Domain.Entities
             UpdatedAt = ClosedAt;
         }
 
-        public TicketComment AddComment(ApplicationUser author, string content, bool isInternal = false)
+        public TicketComment AddComment(string author, string content, bool isInternal = false)
         {
             if (author == null) throw new ArgumentNullException(nameof(author));
             if (string.IsNullOrWhiteSpace(content)) throw new ArgumentException("Content is required", nameof(content));
@@ -69,8 +66,7 @@ namespace Helpdesk.Domain.Entities
             var comment = new TicketComment
             {
                 Ticket = this,
-                AuthorUser = author,
-                AuthorUserId = author.Id,
+                AuthorUserId = author,
                 Content = content,
                 IsInternal = isInternal,
                 CreatedAt = DateTimeOffset.UtcNow

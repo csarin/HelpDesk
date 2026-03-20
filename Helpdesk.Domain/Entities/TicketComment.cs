@@ -13,7 +13,6 @@ namespace Helpdesk.Domain.Entities
         public required string Content { get; set; }
         public required string AuthorUserId { get; set; }
 
-        public required ApplicationUser AuthorUser { get; set; }
         public required Ticket Ticket { get; set; }
     }
 }

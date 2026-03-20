@@ -1,4 +1,4 @@
-using Helpdesk.Domain.Entities;
+using Helpdesk.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

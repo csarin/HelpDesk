@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
-namespace Helpdesk.Domain.Entities
+namespace Helpdesk.Infrastructure.Identity
 {
-    public class ApplicationUser: IdentityUser
+    public class ApplicationUser : IdentityUser
     {
         [MaxLength(100)]
         public string DisplayName { get; set; } = string.Empty;

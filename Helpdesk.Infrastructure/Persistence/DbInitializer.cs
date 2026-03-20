@@ -1,4 +1,5 @@
 ﻿using Helpdesk.Domain.Entities;
+using Helpdesk.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
