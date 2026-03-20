@@ -1,6 +1,5 @@
 ﻿using Helpdesk.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
-using System;
 
 namespace Helpdesk.Domain.Entities
 {
@@ -19,10 +18,10 @@ namespace Helpdesk.Domain.Entities
         public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset? UpdatedAt { get; private set; }
         public DateTimeOffset? ClosedAt { get; private set; }
-
         public Category? Category { get; set; }
         public required ApplicationUser CreatedByUser { get; set; }
         public ApplicationUser? AssignedToUser { get; private set; }
+
         private readonly List<TicketComment> _comments = new();
         public IReadOnlyCollection<TicketComment> Comments => _comments.AsReadOnly();
 
