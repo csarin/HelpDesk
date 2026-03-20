@@ -1,4 +1,7 @@
-﻿using Azure.Core;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Helpdesk.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -102,12 +105,12 @@ namespace Helpdesk.Infrastructure.Persistence
             if (!enabled)
                 return;
 
-            string[] baseCategories =
-            [
+            string[] baseCategories = new string[]
+            {
                 "Support",
                 "Incident",
                 "Request"
-            ];
+            };
 
             var existingNames = await db.Categories
                 .AsNoTracking()
