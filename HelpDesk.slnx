@@ -2,6 +2,9 @@
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/Test/">
+    <Project Path="Tests/Helpdesk.Infrastructure.Tests/Helpdesk.Infrastructure.Tests.csproj" Id="cfd51dda-a8cd-4086-a597-9b93b9bcb5b2" />
+  </Folder>
   <Project Path="Helpdesk.Application/Helpdesk.Application.csproj" Id="7f268652-2cc3-4370-8848-bde5e30ba041" />
   <Project Path="Helpdesk.Domain/Helpdesk.Domain.csproj" Id="2648f765-2288-457d-9b50-e5b46e78e57c" />
   <Project Path="Helpdesk.Infrastructure/Helpdesk.Infrastructure.csproj" Id="a0c7ed1b-bb48-4554-a742-6a439bce79f6" />

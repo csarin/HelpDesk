@@ -1,8 +1,10 @@
 using Helpdesk.Infrastructure.Identity;
+using Helpdesk.Infrastructure.Services;
 using Helpdesk.Infrastructure.Persistence;
 using HelpDesk.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Helpdesk.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +42,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<ITicketService, TicketService>();
 
 var app = builder.Build();
 
