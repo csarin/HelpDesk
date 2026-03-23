@@ -1,0 +1,56 @@
+@page "/tickets/create"
+@using Helpdesk.Application.Models
+@inject Helpdesk.Application.Services.ITicketService TicketService
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
+
+<h3>Create Ticket</h3>
+
+<EditForm Model="model" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Title</label>
+        <InputText @bind="model.Title" />
+    </div>
+
+    <div>
+        <label>Description</label>
+        <InputTextArea @bind="model.Description" />
+    </div>
+
+    <div>
+        <label>Category Id (optional)</label>
+        <InputNumber @bind="model.CategoryId" />
+    </div>
+
+    <button type="submit">Create</button>
+</EditForm>
+
+@if (createdTicketId is not null)
+{
+    <p>Ticket created with Id: @createdTicketId</p>
+}
+
+@code {
+    private Helpdesk.Application.Models.CreateTicketModel model = new();
+    private int? createdTicketId;
+
+    private async Task HandleValidSubmit()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            // not authenticated
+            return;
+        }
+
+        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(userId)) return;
+
+        var ticket = await TicketService.CreateTicketAsync(model.Title, model.Description, model.CategoryId, userId);
+        createdTicketId = ticket.Id;
+        model = new Helpdesk.Application.Models.CreateTicketModel();
+    }
+}

@@ -5,6 +5,7 @@ using HelpDesk.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Helpdesk.Application.Services;
+using Helpdesk.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +44,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<ITicketService, TicketService>();
+// Register infrastructure services via extension
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
