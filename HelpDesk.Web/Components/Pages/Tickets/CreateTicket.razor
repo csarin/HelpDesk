@@ -1,52 +1,266 @@
 @page "/tickets/create"
+@using System.ComponentModel
 @using Helpdesk.Application.Models
-@inject HelpDesk.Web.ViewModels.Tickets.CreateTicketViewModel ViewModel
+@using Microsoft.AspNetCore.Components.Web
+@rendermode RenderMode.InteractiveServer
+@inject CreateTicketViewModel ViewModel
+@implements IDisposable
 
-<h3>Create Ticket</h3>
+<PageTitle>Nuevo ticket</PageTitle>
 
-<EditForm Model="ViewModel.Model" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="ticket-page">
+    <EditForm Model="ViewModel.Model" OnValidSubmit="HandleValidSubmit" FormName="createTicket" class="ticket-form">
+        <DataAnnotationsValidator />
 
-    <div>
-        <label>Title</label>
-        <InputText @bind="ViewModel.Model.Title" />
-    </div>
+        <header class="ticket-header">
+            <div>
+                <h1>Nuevo ticket</h1>
+                <p>Describe el problema o solicitud para que soporte pueda gestionarlo.</p>
+            </div>
+            <div class="ticket-header__actions">
+                <button type="button" class="btn btn--ghost">Cancelar</button>
+                <button type="button" class="btn btn--ghost"><span class="btn__icon btn__icon--lock" aria-hidden="true"></span>Guardar borrador</button>
+                <button type="submit" class="btn btn--primary" disabled="@ViewModel.IsBusy">
+                    @if (ViewModel.IsBusy)
+                    {
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span>Creando...</span>
+                    }
+                    else
+                    {
+                        <span>Crear ticket</span>
+                    }
+                </button>
+            </div>
+        </header>
 
-    <div>
-        <label>Description</label>
-        <InputTextArea @bind="ViewModel.Model.Description" />
-    </div>
+        <div class="ticket-layout">
+            <div class="ticket-main">
+                <section class="panel">
+                    <h2><span class="panel__icon panel__icon--check" aria-hidden="true"></span> Información básica</h2>
+                    <div class="grid grid--3">
+                        <div class="field field--wide">
+                            <label for="ticket-title">Asunto</label>
+                            <InputText id="ticket-title" @bind-Value="ViewModel.Model.Title" placeholder="Ej. No puedo acceder al correo corporativo" />
+                            <ValidationMessage For="@(() => ViewModel.Model.Title)" class="field__error" />
+                        </div>
+                        <div class="field">
+                            <label for="ticket-category">Categoría</label>
+                            <InputSelect id="ticket-category" @bind-Value="ViewModel.Model.CategoryId">
+                                <option value="">Seleccionar</option>
+                                @foreach (var option in CategoryOptions)
+                                {
+                                    <option value="@option.Id">@option.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => ViewModel.Model.CategoryId)" class="field__error" />
+                        </div>
+                        <div class="field">
+                            <label for="ticket-subcategory">Subcategoría</label>
+                            <InputSelect id="ticket-subcategory" @bind-Value="SelectedSubCategory">
+                                @foreach (var subCategory in SubCategoryOptions)
+                                {
+                                    <option value="@subCategory">@subCategory</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+                    <div class="grid grid--3">
+                        <div class="field">
+                            <label for="ticket-priority">Prioridad</label>
+                            <InputSelect id="ticket-priority" @bind-Value="SelectedPriority">
+                                @foreach (var priority in PriorityOptions)
+                                {
+                                    <option value="@priority">@priority</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+                </section>
 
-    <div>
-        <label>Category Id (optional)</label>
-        <InputNumber @bind="ViewModel.Model.CategoryId" />
-    </div>
+                <section class="panel">
+                    <h2><span class="panel__icon panel__icon--plus" aria-hidden="true"></span> Descripción del problema</h2>
+                    <div class="field">
+                        <InputTextArea id="ticket-desc" @bind-Value="ViewModel.Model.Description" rows="4" placeholder="Explica qué ocurre, desde cuándo ocurre y cómo afecta a tu trabajo" />
+                        <ValidationMessage For="@(() => ViewModel.Model.Description)" class="field__error" />
+                    </div>
+                    <div class="grid grid--2">
+                        <div class="field">
+                            <InputText @bind-Value="StepsToReproduce" placeholder="Pasos para reproducir" />
+                        </div>
+                        <div class="field">
+                            <InputText @bind-Value="ExpectedResult" placeholder="Resultado esperado" />
+                        </div>
+                    </div>
+                </section>
 
-    <button type="submit">Create</button>
-</EditForm>
+                <section class="panel">
+                    <h2><span class="panel__icon panel__icon--dot" aria-hidden="true"></span> Contexto</h2>
+                    <div class="field">
+                        <InputText @bind-Value="AffectedService" placeholder="Servicio/Equipo afectado" />
+                    </div>
+                    <div class="grid grid--2">
+                        <div class="field">
+                            <InputSelect @bind-Value="SelectedLocation">
+                                @foreach (var location in LocationOptions)
+                                {
+                                    <option value="@location">@location</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="field">
+                            <InputDate @bind-Value="IncidentDate" />
+                        </div>
+                    </div>
+                </section>
 
-@if (ViewModel.CreatedTicketId is not null)
-{
-    <p>Ticket created with Id: @ViewModel.CreatedTicketId</p>
-}
-@if (!string.IsNullOrEmpty(ViewModel.Error))
-{
-    <p class="text-danger">@ViewModel.Error</p>
-}
-@if (ViewModel.IsBusy)
-{
-    <p>Creating ticket...</p>
-}
+                <section class="panel">
+                    <h2><span class="panel__icon panel__icon--clip" aria-hidden="true"></span> Archivos adjuntos</h2>
+                    <div class="upload-zone">Arrastra archivos aquí o haz clic para subir</div>
+                    <div class="attachment-list">
+                        <div class="attachment-item">
+                            <span>error.png</span>
+                            <button type="button">Quitar</button>
+                        </div>
+                        <div class="attachment-item">
+                            <span>log.txt</span>
+                            <button type="button">Quitar</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="ticket-side">
+                <section class="side-card">
+                    <h3>Resumen</h3>
+                    <p><span class="side-icon side-icon--warn" aria-hidden="true"></span> Prioridad: <strong class="priority-text">@SelectedPriority</strong></p>
+                    <p><span class="side-icon side-icon--clock" aria-hidden="true"></span> SLA estimado: <strong>@GetSla(SelectedPriority)</strong></p>
+                </section>
+
+                <section class="side-card">
+                    <h3>Consejos para un buen ticket</h3>
+                    <ul>
+                        <li>Describe desde cuándo ocurre el problema.</li>
+                        <li>Adjunta una captura si es posible.</li>
+                        <li>Explica el impacto en tu trabajo.</li>
+                    </ul>
+                </section>
+
+                <section class="side-card">
+                    <h3>Resumen del ticket</h3>
+                    <ul>
+                        <li>Asunto: @GetTextOrDash(ViewModel.Model.Title)</li>
+                        <li>Categoría: @GetSelectedCategoryName()</li>
+                        <li>Prioridad: @SelectedPriority</li>
+                    </ul>
+                </section>
+
+                <section class="side-card">
+                    <h3>Datos del solicitante</h3>
+                    <p>Nombre: Juan Pérez</p>
+                    <p>Email: juan.perez@empresa.com</p>
+                    <p>Departamento: Soporte Técnico</p>
+                </section>
+            </aside>
+        </div>
+
+        <ValidationSummary class="validation-summary" />
+    </EditForm>
+
+    @if (ViewModel.CreatedTicketId is not null)
+    {
+        <div class="status status--ok" role="status">
+            Ticket creado correctamente con ID <strong>#@ViewModel.CreatedTicketId</strong>.
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(ViewModel.Error))
+    {
+        <div class="status status--error" role="alert">@ViewModel.Error</div>
+    }
+</div>
 
 @code {
     protected override void OnInitialized()
     {
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
 
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
     }
 
     private async Task HandleValidSubmit()
     {
         await ViewModel.CreateAsync();
     }
+
+    private static string GetTextOrDash(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value.Trim();
+
+    private static string GetSla(string priority) => priority switch
+    {
+        "Crítica" => "2 horas",
+        "Alta" => "4 horas",
+        "Media" => "8 horas",
+        _ => "24 horas"
+    };
+
+    private string GetSelectedCategoryName()
+    {
+        if (ViewModel.Model.CategoryId is null)
+        {
+            return "-";
+        }
+
+        var categoryName = CategoryOptions
+            .Where(x => x.Id == ViewModel.Model.CategoryId.Value)
+            .Select(x => x.Name)
+            .FirstOrDefault();
+
+        return string.IsNullOrWhiteSpace(categoryName) ? "-" : categoryName;
+    }
+
+    private string SelectedPriority { get; set; } = "Alta";
+    private string SelectedSubCategory { get; set; } = "Correo";
+    private string StepsToReproduce { get; set; } = string.Empty;
+    private string ExpectedResult { get; set; } = string.Empty;
+    private string AffectedService { get; set; } = string.Empty;
+    private string SelectedLocation { get; set; } = "Remoto";
+    private DateTime? IncidentDate { get; set; } = DateTime.Today;
+
+    private static readonly (int Id, string Name)[] CategoryOptions =
+    [
+        (1, "Software"),
+        (2, "Hardware"),
+        (3, "Red")
+    ];
+
+    private static readonly string[] SubCategoryOptions =
+    [
+        "Correo",
+        "VPN",
+        "Impresora",
+        "Acceso"
+    ];
+
+    private static readonly string[] PriorityOptions =
+    [
+        "Crítica",
+        "Alta",
+        "Media",
+        "Baja"
+    ];
+
+    private static readonly string[] LocationOptions =
+    [
+        "Remoto",
+        "Oficina central",
+        "Sucursal"
+    ];
 }

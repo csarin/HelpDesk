@@ -1,3 +1,9 @@
+/* Contenedor principal: permite que las páginas usen altura completa */
+.site-main {
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;
