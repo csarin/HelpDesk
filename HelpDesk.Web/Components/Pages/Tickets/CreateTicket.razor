@@ -1,56 +1,52 @@
 @page "/tickets/create"
 @using Helpdesk.Application.Models
-@inject Helpdesk.Application.Services.ITicketService TicketService
-@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
+@inject HelpDesk.Web.ViewModels.Tickets.CreateTicketViewModel ViewModel
 
 <h3>Create Ticket</h3>
 
-<EditForm Model="model" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="ViewModel.Model" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
     <div>
         <label>Title</label>
-        <InputText @bind="model.Title" />
+        <InputText @bind="ViewModel.Model.Title" />
     </div>
 
     <div>
         <label>Description</label>
-        <InputTextArea @bind="model.Description" />
+        <InputTextArea @bind="ViewModel.Model.Description" />
     </div>
 
     <div>
         <label>Category Id (optional)</label>
-        <InputNumber @bind="model.CategoryId" />
+        <InputNumber @bind="ViewModel.Model.CategoryId" />
     </div>
 
     <button type="submit">Create</button>
 </EditForm>
 
-@if (createdTicketId is not null)
+@if (ViewModel.CreatedTicketId is not null)
 {
-    <p>Ticket created with Id: @createdTicketId</p>
+    <p>Ticket created with Id: @ViewModel.CreatedTicketId</p>
+}
+@if (!string.IsNullOrEmpty(ViewModel.Error))
+{
+    <p class="text-danger">@ViewModel.Error</p>
+}
+@if (ViewModel.IsBusy)
+{
+    <p>Creating ticket...</p>
 }
 
 @code {
-    private Helpdesk.Application.Models.CreateTicketModel model = new();
-    private int? createdTicketId;
+    protected override void OnInitialized()
+    {
+
+    }
 
     private async Task HandleValidSubmit()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (!user.Identity?.IsAuthenticated ?? true)
-        {
-            // not authenticated
-            return;
-        }
-
-        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(userId)) return;
-
-        var ticket = await TicketService.CreateTicketAsync(model.Title, model.Description, model.CategoryId, userId);
-        createdTicketId = ticket.Id;
-        model = new Helpdesk.Application.Models.CreateTicketModel();
+        await ViewModel.CreateAsync();
     }
 }

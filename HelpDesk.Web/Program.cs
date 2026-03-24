@@ -1,11 +1,10 @@
+using Helpdesk.Infrastructure.DependencyInjection;
 using Helpdesk.Infrastructure.Identity;
-using Helpdesk.Infrastructure.Services;
 using Helpdesk.Infrastructure.Persistence;
 using HelpDesk.Web;
+using HelpDesk.Web.ViewModels.Tickets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Helpdesk.Application.Services;
-using Helpdesk.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +18,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<CreateTicketViewModel>();
 
 builder.Services.AddAuthentication(options =>
 {
