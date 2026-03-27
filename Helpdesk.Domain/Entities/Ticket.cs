@@ -1,4 +1,4 @@
-﻿using Helpdesk.Domain.Enums;
+using Helpdesk.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Helpdesk.Domain.Entities
@@ -22,6 +22,8 @@ namespace Helpdesk.Domain.Entities
 
         private readonly List<TicketComment> _comments = new();
         public IReadOnlyCollection<TicketComment> Comments => _comments.AsReadOnly();
+        private readonly List<TicketAttachment> _attachments = new();
+        public IReadOnlyCollection<TicketAttachment> Attachments => _attachments.AsReadOnly();
 
         public void AssignTo(string? userId)
         {

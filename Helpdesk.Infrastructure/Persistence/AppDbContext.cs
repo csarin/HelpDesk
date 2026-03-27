@@ -11,6 +11,7 @@ namespace Helpdesk.Infrastructure.Persistence
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Ticket> Tickets => Set<Ticket>();
         public DbSet<TicketComment> TicketComments => Set<TicketComment>();
+        public DbSet<TicketAttachment> TicketAttachments => Set<TicketAttachment>();
 
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -61,7 +62,13 @@ namespace Helpdesk.Infrastructure.Persistence
                       .HasForeignKey(c => c.TicketId)
                       .OnDelete(DeleteBehavior.Cascade);
 
+                entity.HasMany(t => t.Attachments)
+                      .WithOne(a => a.Ticket)
+                      .HasForeignKey(a => a.TicketId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
                 entity.Metadata.FindNavigation(nameof(Ticket.Comments))?.SetPropertyAccessMode(PropertyAccessMode.Field);
+                entity.Metadata.FindNavigation(nameof(Ticket.Attachments))?.SetPropertyAccessMode(PropertyAccessMode.Field);
             });
 
             builder.Entity<TicketComment>(entity =>
@@ -83,6 +90,43 @@ namespace Helpdesk.Infrastructure.Persistence
                       .WithMany()
                       .HasForeignKey(c => c.AuthorUserId)
                       .IsRequired()
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<TicketAttachment>(entity =>
+            {
+                entity.ToTable("TicketAttachments");
+                entity.HasKey(a => a.Id);
+
+                entity.Property(a => a.FileName)
+                      .IsRequired()
+                      .HasMaxLength(260);
+
+                entity.Property(a => a.ContentType)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(a => a.SizeInBytes)
+                      .IsRequired();
+
+                entity.Property(a => a.BlobName)
+                      .IsRequired()
+                      .HasMaxLength(400);
+
+                entity.Property(a => a.BlobUri)
+                      .IsRequired()
+                      .HasMaxLength(1000);
+
+                entity.Property(a => a.UploadedAt)
+                      .IsRequired();
+
+                entity.Property(a => a.UploadedByUserId)
+                      .IsRequired()
+                      .HasMaxLength(450);
+
+                entity.HasOne<ApplicationUser>()
+                      .WithMany()
+                      .HasForeignKey(a => a.UploadedByUserId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
         }

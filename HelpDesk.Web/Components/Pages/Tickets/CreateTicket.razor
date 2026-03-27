@@ -1,6 +1,7 @@
 @page "/tickets/create"
 @using System.ComponentModel
 @using Helpdesk.Application.Models
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @rendermode RenderMode.InteractiveServer
 @inject CreateTicketViewModel ViewModel
@@ -40,7 +41,7 @@
                     <h2><span class="panel__icon panel__icon--check" aria-hidden="true"></span> Información básica</h2>
                     <div class="grid grid--3">
                         <div class="field field--wide">
-                            <label for="ticket-title">Asunto</label>
+                            <label for="ticket-title">Asunto:</label>
                             <InputText id="ticket-title" @bind-Value="ViewModel.Model.Title" placeholder="Ej. No puedo acceder al correo corporativo" />
                             <ValidationMessage For="@(() => ViewModel.Model.Title)" class="field__error" />
                         </div>
@@ -86,10 +87,10 @@
                     </div>
                     <div class="grid grid--2">
                         <div class="field">
-                            <InputText @bind-Value="StepsToReproduce" placeholder="Pasos para reproducir" />
+                            <InputText class="input--large" @bind-Value="StepsToReproduce" placeholder="Pasos para reproducir" />
                         </div>
                         <div class="field">
-                            <InputText @bind-Value="ExpectedResult" placeholder="Resultado esperado" />
+                            <InputText class="input--large" @bind-Value="ExpectedResult" placeholder="Resultado esperado" />
                         </div>
                     </div>
                 </section>
@@ -101,7 +102,7 @@
                     </div>
                     <div class="grid grid--2">
                         <div class="field">
-                            <InputSelect @bind-Value="SelectedLocation">
+                            <InputSelect class="input--large" @bind-Value="SelectedLocation">
                                 @foreach (var location in LocationOptions)
                                 {
                                     <option value="@location">@location</option>
@@ -109,24 +110,28 @@
                             </InputSelect>
                         </div>
                         <div class="field">
-                            <InputDate @bind-Value="IncidentDate" />
+                            <InputDate class="input--large" @bind-Value="IncidentDate" />
                         </div>
                     </div>
                 </section>
 
                 <section class="panel">
                     <h2><span class="panel__icon panel__icon--clip" aria-hidden="true"></span> Archivos adjuntos</h2>
-                    <div class="upload-zone">Arrastra archivos aquí o haz clic para subir</div>
-                    <div class="attachment-list">
-                        <div class="attachment-item">
-                            <span>error.png</span>
-                            <button type="button">Quitar</button>
-                        </div>
-                        <div class="attachment-item">
-                            <span>log.txt</span>
-                            <button type="button">Quitar</button>
-                        </div>
+                    <div class="upload-zone">
+                        <InputFile class="upload-input" OnChange="HandleFilesSelected" multiple />
                     </div>
+                    @if (SelectedAttachments.Count > 0)
+                    {
+                        <div class="attachment-list">
+                            @foreach (var file in SelectedAttachments)
+                            {
+                                <div class="attachment-item">
+                                    <span>@file.Name <small>(@FormatFileSize(file.Size))</small></span>
+                                    <button type="button" @onclick="() => RemoveAttachment(file.Id)">Quitar</button>
+                                </div>
+                            }
+                        </div>
+                    }
                 </section>
             </div>
 
@@ -197,7 +202,12 @@
 
     private async Task HandleValidSubmit()
     {
-        await ViewModel.CreateAsync();
+        var attachments = await BuildAttachmentModelsAsync();
+        await ViewModel.CreateAsync(attachments);
+        if (ViewModel.CreatedTicketId is not null)
+        {
+            SelectedAttachments.Clear();
+        }
     }
 
     private static string GetTextOrDash(string? value) =>
@@ -263,4 +273,69 @@
         "Oficina central",
         "Sucursal"
     ];
+
+    private readonly List<SelectedAttachment> SelectedAttachments = [];
+
+    private void HandleFilesSelected(InputFileChangeEventArgs args)
+    {
+        foreach (var file in args.GetMultipleFiles())
+        {
+            SelectedAttachments.Add(new SelectedAttachment(Guid.NewGuid(), file));
+        }
+    }
+
+    private void RemoveAttachment(Guid id)
+    {
+        SelectedAttachments.RemoveAll(x => x.Id == id);
+    }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024)
+        {
+            return $"{sizeInBytes} B";
+        }
+
+        var kb = sizeInBytes / 1024d;
+        if (kb < 1024)
+        {
+            return $"{kb:0.#} KB";
+        }
+
+        var mb = kb / 1024d;
+        return $"{mb:0.#} MB";
+    }
+
+    private async Task<IReadOnlyCollection<CreateTicketAttachmentModel>> BuildAttachmentModelsAsync()
+    {
+        const long maxBytesPerFile = 10 * 1024 * 1024; // 10 MB
+        var models = new List<CreateTicketAttachmentModel>(SelectedAttachments.Count);
+
+        foreach (var selected in SelectedAttachments)
+        {
+            if (selected.File.Size == 0)
+                continue;
+
+            await using var stream = selected.File.OpenReadStream(maxBytesPerFile);
+            using var memory = new MemoryStream();
+            await stream.CopyToAsync(memory);
+
+            models.Add(new CreateTicketAttachmentModel
+            {
+                FileName = selected.File.Name,
+                ContentType = string.IsNullOrWhiteSpace(selected.File.ContentType)
+                    ? "application/octet-stream"
+                    : selected.File.ContentType,
+                Content = memory.ToArray()
+            });
+        }
+
+        return models;
+    }
+
+    private sealed record SelectedAttachment(Guid Id, IBrowserFile File)
+    {
+        public string Name => File.Name;
+        public long Size => File.Size;
+    }
 }

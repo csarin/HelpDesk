@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Helpdesk.Application.Services;
+using Helpdesk.Infrastructure.Services;
 
 namespace Helpdesk.Infrastructure.DependencyInjection
 {
@@ -8,9 +9,9 @@ namespace Helpdesk.Infrastructure.DependencyInjection
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            _ = configuration;
-
             services.AddScoped<ITicketService, Helpdesk.Infrastructure.Services.TicketService>();
+            services.AddScoped<ITicketAttachmentService, TicketAttachmentService>();
+            services.Configure<AzureBlobStorageOptions>(configuration.GetSection(AzureBlobStorageOptions.SectionName));
             return services;
         }
     }

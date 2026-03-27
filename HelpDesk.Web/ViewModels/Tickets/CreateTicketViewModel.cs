@@ -10,6 +10,7 @@ namespace HelpDesk.Web.ViewModels.Tickets
     public class CreateTicketViewModel : INotifyPropertyChanged
     {
         private readonly ITicketService _ticketService;
+        private readonly ITicketAttachmentService _ticketAttachmentService;
         private readonly AuthenticationStateProvider _authProvider;
 
         public CreateTicketModel Model { get; } = new CreateTicketModel();
@@ -35,13 +36,17 @@ namespace HelpDesk.Web.ViewModels.Tickets
             private set { if (_error != value) { _error = value; OnPropertyChanged(); } }
         }
 
-        public CreateTicketViewModel(ITicketService ticketService, AuthenticationStateProvider authProvider)
+        public CreateTicketViewModel(
+            ITicketService ticketService,
+            ITicketAttachmentService ticketAttachmentService,
+            AuthenticationStateProvider authProvider)
         {
             _ticketService = ticketService ?? throw new ArgumentNullException(nameof(ticketService));
+            _ticketAttachmentService = ticketAttachmentService ?? throw new ArgumentNullException(nameof(ticketAttachmentService));
             _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
         }
 
-        public async Task CreateAsync()
+        public async Task CreateAsync(IReadOnlyCollection<CreateTicketAttachmentModel>? attachments = null)
         {
             IsBusy = true;
             Error = null;
@@ -64,6 +69,11 @@ namespace HelpDesk.Web.ViewModels.Tickets
 
                 var ticket = await _ticketService.CreateTicketAsync(Model.Title, Model.Description, Model.CategoryId, userId);
                 CreatedTicketId = ticket.Id;
+
+                if (attachments is { Count: > 0 })
+                {
+                    await _ticketAttachmentService.UploadAttachmentsAsync(ticket.Id, userId, attachments);
+                }
 
                 Model.Title = string.Empty;
                 Model.Description = null;

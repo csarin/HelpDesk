@@ -7,12 +7,14 @@
     --primary-hover: #0955b3;
     --bg: #f4f5f8;
     min-height: 100%;
-    padding: 1.45rem 1.55rem;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 1.6rem 1.7rem;
     background: var(--bg);
     color: var(--text);
     box-sizing: border-box;
     font-family: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .ticket-header {
@@ -20,20 +22,20 @@
     justify-content: space-between;
     gap: 1rem;
     align-items: flex-start;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.35rem;
 }
 
 .ticket-header h1 {
     margin: 0;
     font-size: 2.08rem;
-    font-weight: 700;
+    font-weight: 650;
     letter-spacing: -0.01em;
 }
 
 .ticket-header p {
-    margin: 0.35rem 0 0;
+    margin: 0.45rem 0 0;
     color: #64748b;
-    font-size: 0.98rem;
+    font-size: 0.94rem;
     font-style: italic;
 }
 
@@ -47,41 +49,43 @@
     border: 1px solid var(--border);
     background: #fff;
     color: #1f2937;
-    padding: 0.56rem 1.05rem;
+    padding: 0.52rem 1.02rem;
     border-radius: 0.3rem;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     font-weight: 600;
     cursor: pointer;
+    min-height: 34px;
 }
 
 .btn__icon {
     margin-right: 0.35rem;
     display: inline-block;
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 0.78rem;
+    height: 0.78rem;
     position: relative;
-    top: 0.08rem;
+    top: 0.03rem;
+    opacity: 0.9;
 }
 
 .btn__icon--lock::before {
     content: "";
     position: absolute;
     inset: 0;
-    border: 1.6px solid #6b7280;
+    border: 1.4px solid #6b7280;
     border-top: 0;
-    border-radius: 0.1rem;
+    border-radius: 0.08rem;
 }
 
 .btn__icon--lock::after {
     content: "";
     position: absolute;
-    width: 0.48rem;
-    height: 0.34rem;
-    left: 0.21rem;
-    top: -0.24rem;
-    border: 1.6px solid #6b7280;
+    width: 0.4rem;
+    height: 0.28rem;
+    left: 0.18rem;
+    top: -0.2rem;
+    border: 1.4px solid #6b7280;
     border-bottom: 0;
-    border-radius: 0.25rem 0.25rem 0 0;
+    border-radius: 0.2rem 0.2rem 0 0;
 }
 
 .btn--primary {
@@ -117,14 +121,14 @@
 
 .ticket-layout {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr) 312px;
+    gap: 0.95rem;
 }
 
 .ticket-main,
 .ticket-side {
     display: grid;
-    gap: 0.95rem;
+    gap: 1.05rem;
     align-content: start;
 }
 
@@ -133,36 +137,37 @@
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 0.3rem;
-    padding: 0.95rem 1.05rem;
+    padding: 1rem 1.1rem;
     box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
 }
 
 .side-card {
-    padding: 1rem 1.1rem;
+    padding: 0.95rem 1.05rem;
 }
 
 .panel h2,
 .side-card h3 {
-    margin: 0 0 0.85rem;
-    padding-bottom: 0.7rem;
+    margin: 0 0 0.95rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid #e7e9ed;
-    font-size: 1rem;
+    font-size: 1.08rem;
     font-weight: 700;
     color: #0f172a;
 }
 
 .panel__icon {
     display: inline-flex;
-    width: 0.92rem;
-    height: 0.92rem;
+    width: 0.74rem;
+    height: 0.74rem;
     align-items: center;
     justify-content: center;
-    font-size: 0.64rem;
+    font-size: 0.58rem;
     font-weight: 700;
-    border-radius: 0.2rem;
-    background: #1f6fe5;
-    color: #fff;
-    margin-right: 0.3rem;
+    border-radius: 0.14rem;
+    background: #8fa5c6;
+    color: #f8fbff;
+    margin-right: 0.36rem;
+    transform: translateY(-1px);
 }
 
 .panel__icon--plus {
@@ -179,10 +184,10 @@
 
 .panel__icon--check::before {
     content: "";
-    width: 0.24rem;
-    height: 0.46rem;
-    border-right: 2px solid #fff;
-    border-bottom: 2px solid #fff;
+    width: 0.2rem;
+    height: 0.38rem;
+    border-right: 1.6px solid #f4f8ff;
+    border-bottom: 1.6px solid #f4f8ff;
     transform: rotate(45deg) translate(-1px, -1px);
 }
 
@@ -190,7 +195,7 @@
 .panel__icon--plus::after {
     content: "";
     position: absolute;
-    background: #fff;
+    background: #f4f8ff;
 }
 
 .panel__icon--plus {
@@ -198,40 +203,40 @@
 }
 
 .panel__icon--plus::before {
-    width: 0.44rem;
-    height: 2px;
+    width: 0.36rem;
+    height: 1.8px;
 }
 
 .panel__icon--plus::after {
-    width: 2px;
-    height: 0.44rem;
+    width: 1.8px;
+    height: 0.36rem;
 }
 
 .panel__icon--dot::before {
     content: "";
-    width: 0.25rem;
-    height: 0.25rem;
-    background: #fff;
+    width: 0.22rem;
+    height: 0.22rem;
+    background: #f4f8ff;
     border-radius: 50%;
 }
 
 .panel__icon--clip::before {
     content: "";
-    width: 0.44rem;
-    height: 0.44rem;
-    border: 2px solid #fff;
+    width: 0.36rem;
+    height: 0.36rem;
+    border: 1.6px solid #f4f8ff;
     border-left: 0;
-    border-radius: 0.25rem;
+    border-radius: 0.2rem;
     transform: rotate(-32deg);
 }
 
 .grid {
     display: grid;
-    gap: 0.82rem;
+    gap: 0.9rem;
 }
 
 .grid--3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1.35fr 1fr 1fr;
 }
 
 .grid--2 {
@@ -241,7 +246,7 @@
 .field {
     display: flex;
     flex-direction: column;
-    gap: 0.38rem;
+    gap: 0.44rem;
 }
 
 .field--wide {
@@ -249,26 +254,52 @@
 }
 
 .field label {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: #1f2937;
+    letter-spacing: 0.01em;
 }
 
 .field :is(input, select, textarea) {
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid #bcc5d2;
+    border: 1px solid #c7cfdb;
     border-radius: 0.22rem;
-    background: #fcfdff;
-    padding: 0.54rem 0.62rem;
+    background: #ffffff;
+    padding: 0.62rem 0.72rem;
     font-size: 0.94rem;
-    min-height: 36px;
+    min-height: 40px;
     color: var(--text);
 }
 
 .field textarea {
     resize: vertical;
-    min-height: 88px;
+    min-height: 92px;
+    margin-bottom: 0.15rem;
+}
+
+.panel > .field + .field {
+    margin-top: 0.15rem;
+}
+
+.panel .grid + .grid {
+    margin-top: 0.7rem;
+}
+
+.panel .grid + .field,
+.panel .field + .grid {
+    margin-top: 0.75rem;
+}
+
+.input--large {
+    min-height: 46px !important;
+    font-size: 0.9rem !important;
+    padding-top: 0.62rem !important;
+    padding-bottom: 0.62rem !important;
+}
+
+.input--large[type="date"] {
+    line-height: 1.2 !important;
 }
 
 .field :is(input, select, textarea):focus {
@@ -286,30 +317,35 @@
     border: 1px dashed #c5ccd8;
     border-radius: 0.3rem;
     background: #f8fafc;
-    text-align: center;
     color: #4b5563;
-    padding: 1.15rem;
-    min-height: 2.7rem;
+    padding: 1.2rem;
+    min-height: 58px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
+}
+
+.upload-input {
+    width: 100%;
+    font-size: 0.86rem;
+    color: #334155;
 }
 
 .attachment-list {
-    margin-top: 0.7rem;
+    margin-top: 0.85rem;
     display: grid;
-    gap: 0.4rem;
+    gap: 0.42rem;
 }
 
 .attachment-item {
     border: 1px solid #d3d8e2;
     border-radius: 0.24rem;
-    padding: 0.44rem 0.58rem;
+    padding: 0.52rem 0.64rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     background: #fff;
 }
 
@@ -321,10 +357,15 @@
     font-weight: 600;
 }
 
+.attachment-item small {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
 .side-card p,
 .side-card li {
     margin: 0.46rem 0;
-    font-size: 0.92rem;
+    font-size: 0.87rem;
     color: #334155;
 }
 
@@ -334,63 +375,63 @@
 }
 
 .side-icon {
-    margin-right: 0.28rem;
+    margin-right: 0.32rem;
     display: inline-block;
-    width: 0.88rem;
-    height: 0.88rem;
+    width: 0.74rem;
+    height: 0.74rem;
     border-radius: 50%;
-    vertical-align: -0.12rem;
+    vertical-align: -0.1rem;
     position: relative;
 }
 
 .side-icon--warn {
-    background: #fff1f2;
-    border: 1px solid #fecdd3;
+    background: #f8fafc;
+    border: 1px solid #dbe3ee;
 }
 
 .side-icon--warn::before {
     content: "";
     position: absolute;
-    left: 0.4rem;
-    top: 0.18rem;
-    width: 2px;
-    height: 0.34rem;
-    background: #dc2626;
+    left: 0.37rem;
+    top: 0.17rem;
+    width: 1.7px;
+    height: 0.3rem;
+    background: #8a97aa;
 }
 
 .side-icon--warn::after {
     content: "";
     position: absolute;
-    left: 0.4rem;
-    bottom: 0.14rem;
-    width: 2px;
-    height: 2px;
-    background: #dc2626;
+    left: 0.37rem;
+    bottom: 0.12rem;
+    width: 1.7px;
+    height: 1.7px;
+    background: #8a97aa;
 }
 
 .side-icon--clock {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
+    background: #f8fafc;
+    border: 1px solid #dbe3ee;
 }
 
 .side-icon--clock::before {
     content: "";
     position: absolute;
-    left: 0.4rem;
-    top: 0.2rem;
-    width: 2px;
-    height: 0.22rem;
-    background: #2563eb;
+    left: 0.37rem;
+    top: 0.18rem;
+    width: 1.7px;
+    height: 0.2rem;
+    background: #8a97aa;
 }
 
 .side-icon--clock::after {
     content: "";
     position: absolute;
-    left: 0.4rem;
-    top: 0.4rem;
-    width: 0.18rem;
-    height: 2px;
-    background: #2563eb;
+    left: 0.37rem;
+    top: 0.36rem;
+    width: 0.16rem;
+    height: 1.7px;
+    background: #8a97aa;
 }
 
 .priority-text {
@@ -405,14 +446,14 @@
     color: #991b1b;
     border-radius: 0.3rem;
     padding: 0.62rem 0.82rem;
-    font-size: 0.86rem;
+    font-size: 0.82rem;
 }
 
 .status {
     margin-top: 0.9rem;
     border-radius: 0.3rem;
     padding: 0.65rem 0.82rem;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     border: 1px solid transparent;
 }
 
