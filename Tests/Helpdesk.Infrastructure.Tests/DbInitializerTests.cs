@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using System.Reflection;
 
 namespace Helpdesk.Infrastructure.Tests
@@ -102,6 +103,95 @@ namespace Helpdesk.Infrastructure.Tests
             Assert.Contains("Request", names);
         }
 
+        [Fact]
+        public async Task SeedRoles_WhenCreateFails_Throws()
+        {
+            var manager = CreateMockRoleManager();
+            manager.Setup(x => x.RoleExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
+            manager.Setup(x => x.CreateAsync(It.IsAny<IdentityRole>()))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "fail-role" }));
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                InvokePrivateAsync("SeedRolesAsync", manager.Object));
+
+            Assert.Contains("fail-role", ex.Message);
+        }
+
+        [Fact]
+        public async Task SeedAdmin_WhenCreateFails_Throws()
+        {
+            var manager = CreateMockUserManager();
+            manager.Setup(x => x.FindByEmailAsync("admin@helpdesk.local")).ReturnsAsync((ApplicationUser?)null);
+            manager.Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), "Admin123!"))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "fail-create" }));
+
+            var configuration = BuildConfiguration(
+                ("SeedData:Admin:Enabled", "true"),
+                ("SeedData:Admin:Email", "admin@helpdesk.local"),
+                ("SeedData:Admin:Password", "Admin123!"),
+                ("SeedData:Admin:DisplayName", "Administrador"));
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                InvokePrivateAsync("SeedAdminAsync", manager.Object, configuration));
+
+            Assert.Contains("fail-create", ex.Message);
+        }
+
+        [Fact]
+        public async Task SeedAdmin_WhenUpdateFails_Throws()
+        {
+            var existing = new ApplicationUser
+            {
+                UserName = "admin@helpdesk.local",
+                Email = "admin@helpdesk.local",
+                DisplayName = "Old Name"
+            };
+
+            var manager = CreateMockUserManager();
+            manager.Setup(x => x.FindByEmailAsync("admin@helpdesk.local")).ReturnsAsync(existing);
+            manager.Setup(x => x.UpdateAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "fail-update" }));
+
+            var configuration = BuildConfiguration(
+                ("SeedData:Admin:Enabled", "true"),
+                ("SeedData:Admin:Email", "admin@helpdesk.local"),
+                ("SeedData:Admin:Password", "Admin123!"),
+                ("SeedData:Admin:DisplayName", "Administrador"));
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                InvokePrivateAsync("SeedAdminAsync", manager.Object, configuration));
+
+            Assert.Contains("fail-update", ex.Message);
+        }
+
+        [Fact]
+        public async Task SeedAdmin_WhenAddToRoleFails_Throws()
+        {
+            var existing = new ApplicationUser
+            {
+                UserName = "admin@helpdesk.local",
+                Email = "admin@helpdesk.local",
+                DisplayName = "Administrador"
+            };
+
+            var manager = CreateMockUserManager();
+            manager.Setup(x => x.FindByEmailAsync("admin@helpdesk.local")).ReturnsAsync(existing);
+            manager.Setup(x => x.IsInRoleAsync(existing, AppRoles.Admin)).ReturnsAsync(false);
+            manager.Setup(x => x.AddToRoleAsync(existing, AppRoles.Admin))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "fail-role-assign" }));
+
+            var configuration = BuildConfiguration(
+                ("SeedData:Admin:Enabled", "true"),
+                ("SeedData:Admin:Email", "admin@helpdesk.local"),
+                ("SeedData:Admin:Password", "Admin123!"),
+                ("SeedData:Admin:DisplayName", "Administrador"));
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                InvokePrivateAsync("SeedAdminAsync", manager.Object, configuration));
+
+            Assert.Contains("fail-role-assign", ex.Message);
+        }
+
         private static ServiceProvider BuildProvider()
         {
             var services = new ServiceCollection();
@@ -113,6 +203,32 @@ namespace Helpdesk.Infrastructure.Tests
                 .AddEntityFrameworkStores<AppDbContext>();
 
             return services.BuildServiceProvider();
+        }
+
+        private static Mock<RoleManager<IdentityRole>> CreateMockRoleManager()
+        {
+            var store = new Mock<IRoleStore<IdentityRole>>();
+            return new Mock<RoleManager<IdentityRole>>(
+                store.Object,
+                Array.Empty<IRoleValidator<IdentityRole>>(),
+                new UpperInvariantLookupNormalizer(),
+                new IdentityErrorDescriber(),
+                null!);
+        }
+
+        private static Mock<UserManager<ApplicationUser>> CreateMockUserManager()
+        {
+            var store = new Mock<IUserStore<ApplicationUser>>();
+            return new Mock<UserManager<ApplicationUser>>(
+                store.Object,
+                null!,
+                new PasswordHasher<ApplicationUser>(),
+                Array.Empty<IUserValidator<ApplicationUser>>(),
+                Array.Empty<IPasswordValidator<ApplicationUser>>(),
+                new UpperInvariantLookupNormalizer(),
+                new IdentityErrorDescriber(),
+                null!,
+                null!);
         }
 
         private static IConfiguration BuildConfiguration(params (string Key, string Value)[] pairs)

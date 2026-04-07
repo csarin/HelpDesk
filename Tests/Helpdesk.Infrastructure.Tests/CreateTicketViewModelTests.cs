@@ -114,6 +114,57 @@ namespace Helpdesk.Infrastructure.Tests
             Assert.False(vm.IsBusy);
         }
 
+        [Fact]
+        public async Task CreateAsync_WithEmptyAttachmentList_DoesNotCallAttachmentService()
+        {
+            var ticketService = new StubTicketService
+            {
+                TicketToReturn = new Ticket { Id = 300, Title = "t", CreatedByUserId = "u1" }
+            };
+            var attachmentService = new StubAttachmentService();
+            var vm = new CreateTicketViewModel(
+                ticketService,
+                attachmentService,
+                new StubAuthStateProvider(AuthenticatedUser("u1")));
+
+            await vm.CreateAsync([]);
+
+            Assert.Equal(0, attachmentService.Calls);
+            Assert.Equal(300, vm.CreatedTicketId);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WhenAttachmentUploadThrows_SetsError()
+        {
+            var ticketService = new StubTicketService
+            {
+                TicketToReturn = new Ticket { Id = 400, Title = "t", CreatedByUserId = "u1" }
+            };
+            var attachmentService = new StubAttachmentService
+            {
+                ExceptionToThrow = new InvalidOperationException("upload-fail")
+            };
+            var vm = new CreateTicketViewModel(
+                ticketService,
+                attachmentService,
+                new StubAuthStateProvider(AuthenticatedUser("u1")));
+
+            var attachments = new[]
+            {
+                new CreateTicketAttachmentModel
+                {
+                    FileName = "x.txt",
+                    ContentType = "text/plain",
+                    Content = [1]
+                }
+            };
+
+            await vm.CreateAsync(attachments);
+
+            Assert.Equal("upload-fail", vm.Error);
+            Assert.False(vm.IsBusy);
+        }
+
         private static ClaimsPrincipal AuthenticatedUser(string id) =>
             new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, id)], "test"));
 
@@ -143,9 +194,11 @@ namespace Helpdesk.Infrastructure.Tests
             public int LastTicketId { get; private set; }
             public string? LastUserId { get; private set; }
             public IReadOnlyCollection<CreateTicketAttachmentModel>? LastAttachments { get; private set; }
+            public Exception? ExceptionToThrow { get; set; }
 
             public Task UploadAttachmentsAsync(int ticketId, string uploadedByUserId, IReadOnlyCollection<CreateTicketAttachmentModel> attachments, CancellationToken cancellationToken = default)
             {
+                if (ExceptionToThrow is not null) throw ExceptionToThrow;
                 Calls++;
                 LastTicketId = ticketId;
                 LastUserId = uploadedByUserId;

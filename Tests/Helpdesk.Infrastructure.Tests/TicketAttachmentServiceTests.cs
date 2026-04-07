@@ -127,6 +127,102 @@ namespace Helpdesk.Infrastructure.Tests
             Assert.Empty(db.TicketAttachments);
         }
 
+        [Fact]
+        public async Task UploadAttachments_UsesDefaultContentType_WhenMissing()
+        {
+            await using var db = CreateInMemoryDb();
+            db.Tickets.Add(new Ticket
+            {
+                Title = "T1",
+                CreatedByUserId = "user1"
+            });
+            await db.SaveChangesAsync();
+
+            var fakeStorage = new FakeBlobStorage();
+            var service = CreateService(db, fakeStorage);
+            var attachments = new[]
+            {
+                new CreateTicketAttachmentModel
+                {
+                    FileName = "doc.bin",
+                    ContentType = "",
+                    Content = [9,9]
+                }
+            };
+
+            await service.UploadAttachmentsAsync(1, "user1", attachments);
+
+            Assert.Single(fakeStorage.Uploads);
+            Assert.Equal("application/octet-stream", fakeStorage.Uploads[0].ContentType);
+            var row = await db.TicketAttachments.SingleAsync();
+            Assert.Equal("application/octet-stream", row.ContentType);
+        }
+
+        [Fact]
+        public async Task UploadAttachments_UsesFallbackFileName_WhenProvidedNameInvalid()
+        {
+            await using var db = CreateInMemoryDb();
+            db.Tickets.Add(new Ticket
+            {
+                Title = "T1",
+                CreatedByUserId = "user1"
+            });
+            await db.SaveChangesAsync();
+
+            var fakeStorage = new FakeBlobStorage();
+            var service = CreateService(db, fakeStorage);
+            var attachments = new[]
+            {
+                new CreateTicketAttachmentModel
+                {
+                    FileName = "   ",
+                    ContentType = "text/plain",
+                    Content = [1]
+                }
+            };
+
+            await service.UploadAttachmentsAsync(1, "user1", attachments);
+
+            var row = await db.TicketAttachments.SingleAsync();
+            Assert.Equal("file.bin", row.FileName);
+            Assert.EndsWith(".bin", row.BlobName);
+        }
+
+        [Fact]
+        public async Task UploadAttachments_WithMultipleValidFiles_PersistsAll()
+        {
+            await using var db = CreateInMemoryDb();
+            db.Tickets.Add(new Ticket
+            {
+                Title = "T1",
+                CreatedByUserId = "user1"
+            });
+            await db.SaveChangesAsync();
+
+            var fakeStorage = new FakeBlobStorage();
+            var service = CreateService(db, fakeStorage);
+            var attachments = new[]
+            {
+                new CreateTicketAttachmentModel
+                {
+                    FileName = "a.txt",
+                    ContentType = "text/plain",
+                    Content = [1]
+                },
+                new CreateTicketAttachmentModel
+                {
+                    FileName = "b.log",
+                    ContentType = "text/plain",
+                    Content = [2,3]
+                }
+            };
+
+            await service.UploadAttachmentsAsync(1, "user1", attachments);
+
+            Assert.Equal(2, fakeStorage.Uploads.Count);
+            Assert.Equal(2, await db.TicketAttachments.CountAsync());
+        }
+
         private static TicketAttachmentService CreateService(AppDbContext db, IAttachmentBlobStorage storage)
         {
             return new TicketAttachmentService(db, storage);
