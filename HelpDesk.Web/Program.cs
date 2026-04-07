@@ -2,8 +2,10 @@ using Helpdesk.Infrastructure.DependencyInjection;
 using Helpdesk.Infrastructure.Identity;
 using Helpdesk.Infrastructure.Persistence;
 using Helpdesk.Application.Services;
+using HelpDesk.Web.Authorization;
 using HelpDesk.Web;
 using HelpDesk.Web.ViewModels.Tickets;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +31,13 @@ builder.Services.AddAuthentication(options =>
 })
 .AddIdentityCookies();
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        TicketAttachmentAccessRequirement.PolicyName,
+        policy => policy.Requirements.Add(new TicketAttachmentAccessRequirement()));
+});
+builder.Services.AddSingleton<IAuthorizationHandler, TicketAttachmentAccessHandler>();
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -71,9 +79,32 @@ app.MapRazorComponents<App>()
 app.MapGet("/tickets/{ticketId:int}/attachments/{attachmentId:int}", async (
     int ticketId,
     int attachmentId,
+    HttpContext httpContext,
+    ITicketService ticketService,
     ITicketAttachmentQueryService attachmentQueryService,
+    IAuthorizationService authorizationService,
     CancellationToken cancellationToken) =>
 {
+    if (httpContext.User.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    var ticket = await ticketService.GetByIdAsync(ticketId, cancellationToken);
+    if (ticket is null)
+    {
+        return Results.NotFound();
+    }
+
+    var authResult = await authorizationService.AuthorizeAsync(
+        httpContext.User,
+        ticket,
+        TicketAttachmentAccessRequirement.PolicyName);
+    if (!authResult.Succeeded)
+    {
+        return Results.Forbid();
+    }
+
     var attachment = await attachmentQueryService.DownloadAsync(ticketId, attachmentId, cancellationToken);
     if (attachment is null)
     {
@@ -86,9 +117,32 @@ app.MapGet("/tickets/{ticketId:int}/attachments/{attachmentId:int}", async (
 app.MapGet("/tickets/{ticketId:int}/attachments/{attachmentId:int}/preview", async (
     int ticketId,
     int attachmentId,
+    HttpContext httpContext,
+    ITicketService ticketService,
     ITicketAttachmentQueryService attachmentQueryService,
+    IAuthorizationService authorizationService,
     CancellationToken cancellationToken) =>
 {
+    if (httpContext.User.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    var ticket = await ticketService.GetByIdAsync(ticketId, cancellationToken);
+    if (ticket is null)
+    {
+        return Results.NotFound();
+    }
+
+    var authResult = await authorizationService.AuthorizeAsync(
+        httpContext.User,
+        ticket,
+        TicketAttachmentAccessRequirement.PolicyName);
+    if (!authResult.Succeeded)
+    {
+        return Results.Forbid();
+    }
+
     var attachment = await attachmentQueryService.DownloadAsync(ticketId, attachmentId, cancellationToken);
     if (attachment is null)
     {
