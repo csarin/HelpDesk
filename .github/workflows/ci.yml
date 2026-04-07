@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ "develop", "main" ]
+  pull_request:
+    branches: [ "develop", "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-test-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore HelpDesk.slnx
+
+      - name: Build
+        run: dotnet build HelpDesk.slnx --no-restore --configuration Release
+
+      - name: Test with coverage
+        run: dotnet test HelpDesk.slnx --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Install coverage tools
+        run: |
+          dotnet tool install --global dotnet-coverage --version 17.14.1
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.*
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Merge coverage reports
+        shell: bash
+        run: |
+          mapfile -t COVERAGE_FILES < <(find TestResults -name "coverage.cobertura.xml")
+          if [ "${#COVERAGE_FILES[@]}" -eq 0 ]; then
+            echo "No coverage files found."
+            exit 1
+          fi
+          dotnet-coverage merge "${COVERAGE_FILES[@]}" -f cobertura -o TestResults/coverage.merged.cobertura.xml
+
+      - name: Generate HTML coverage report
+        run: |
+          reportgenerator \
+            -reports:TestResults/coverage.merged.cobertura.xml \
+            -targetdir:TestResults/CoverageReport \
+            "-reporttypes:HtmlInline_AzurePipelines;TextSummary"
+
+      - name: Publish coverage summary
+        run: cat TestResults/CoverageReport/Summary.txt
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            TestResults/coverage.merged.cobertura.xml
+            TestResults/CoverageReport
