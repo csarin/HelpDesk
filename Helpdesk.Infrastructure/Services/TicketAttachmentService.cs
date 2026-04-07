@@ -1,33 +1,22 @@
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Helpdesk.Application.Models;
 using Helpdesk.Application.Services;
 using Helpdesk.Domain.Entities;
 using Helpdesk.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Helpdesk.Infrastructure.Services
 {
     public sealed class TicketAttachmentService : ITicketAttachmentService
     {
         private readonly AppDbContext _db;
-        private readonly BlobContainerClient _container;
+        private readonly IAttachmentBlobStorage _blobStorage;
 
         public TicketAttachmentService(
             AppDbContext db,
-            IOptions<AzureBlobStorageOptions> options)
+            IAttachmentBlobStorage blobStorage)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
-
-            var value = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            if (string.IsNullOrWhiteSpace(value.ConnectionString))
-                throw new InvalidOperationException("Azure Blob connection string is not configured.");
-            if (string.IsNullOrWhiteSpace(value.ContainerName))
-                throw new InvalidOperationException("Azure Blob container name is not configured.");
-
-            var serviceClient = new BlobServiceClient(value.ConnectionString);
-            _container = serviceClient.GetBlobContainerClient(value.ContainerName);
+            _blobStorage = blobStorage ?? throw new ArgumentNullException(nameof(blobStorage));
         }
 
         public async Task UploadAttachmentsAsync(
@@ -47,7 +36,7 @@ namespace Helpdesk.Infrastructure.Services
             if (!ticketExists)
                 throw new InvalidOperationException($"Ticket with id {ticketId} does not exist.");
 
-            await _container.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+            await _blobStorage.EnsureContainerExistsAsync(cancellationToken);
 
             var saved = new List<TicketAttachment>(attachments.Count);
             foreach (var attachment in attachments)
@@ -55,33 +44,26 @@ namespace Helpdesk.Infrastructure.Services
                 if (attachment.Content.Length == 0)
                     continue;
 
-                var safeName = Path.GetFileName(attachment.FileName);
+                var safeName = Path.GetFileName(attachment.FileName).Trim();
+                if (string.IsNullOrWhiteSpace(safeName))
+                {
+                    safeName = "file.bin";
+                }
                 var extension = Path.GetExtension(safeName);
                 var blobName = $"{ticketId}/{Guid.NewGuid():N}{extension}";
-                var blobClient = _container.GetBlobClient(blobName);
-
-                using var stream = new MemoryStream(attachment.Content, writable: false);
-                await blobClient.UploadAsync(
-                    stream,
-                    new BlobUploadOptions
-                    {
-                        HttpHeaders = new BlobHttpHeaders
-                        {
-                            ContentType = string.IsNullOrWhiteSpace(attachment.ContentType)
-                                ? "application/octet-stream"
-                                : attachment.ContentType
-                        }
-                    },
-                    cancellationToken);
+                var contentType = string.IsNullOrWhiteSpace(attachment.ContentType)
+                    ? "application/octet-stream"
+                    : attachment.ContentType;
+                var blobUri = await _blobStorage.UploadAsync(blobName, attachment.Content, contentType, cancellationToken);
 
                 saved.Add(new TicketAttachment
                 {
                     TicketId = ticketId,
                     FileName = safeName,
-                    ContentType = string.IsNullOrWhiteSpace(attachment.ContentType) ? "application/octet-stream" : attachment.ContentType,
+                    ContentType = contentType,
                     SizeInBytes = attachment.Content.Length,
                     BlobName = blobName,
-                    BlobUri = blobClient.Uri.ToString(),
+                    BlobUri = blobUri.ToString(),
                     UploadedByUserId = uploadedByUserId,
                     UploadedAt = DateTimeOffset.UtcNow
                 });
