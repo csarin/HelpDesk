@@ -1,0 +1,71 @@
+@page "/tickets/{TicketId:int}"
+@using Helpdesk.Application.Services
+@using Helpdesk.Domain.Entities
+@inject ITicketService TicketService
+@inject ITicketAttachmentQueryService AttachmentQueryService
+
+<PageTitle>Detalle ticket</PageTitle>
+
+@if (_loading)
+{
+    <p>Cargando ticket...</p>
+}
+else if (_ticket is null)
+{
+    <p>No se encontró el ticket.</p>
+}
+else
+{
+    <h1>Ticket #@_ticket.Id</h1>
+    <p><strong>Asunto:</strong> @_ticket.Title</p>
+    <p><strong>Categoría:</strong> @(_ticket.Category?.Name ?? "-")</p>
+    <p><strong>Estado:</strong> @_ticket.Status</p>
+    <p><strong>Creado:</strong> @_ticket.CreatedAt.LocalDateTime.ToString("g")</p>
+
+    <h2>Adjuntos</h2>
+    @if (_attachments.Count == 0)
+    {
+        <p>Este ticket no tiene adjuntos.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var attachment in _attachments)
+            {
+                <li>
+                    <strong>@attachment.FileName</strong>
+                    (@FormatFileSize(attachment.SizeInBytes))
+                    - <a href="@($"/tickets/{_ticket.Id}/attachments/{attachment.Id}")">Descargar</a>
+                    - <a href="@($"/tickets/{_ticket.Id}/attachments/{attachment.Id}/preview")" target="_blank">Previsualizar</a>
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    [Parameter]
+    public int TicketId { get; set; }
+
+    private bool _loading = true;
+    private Ticket? _ticket;
+    private IReadOnlyCollection<TicketAttachment> _attachments = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _ticket = await TicketService.GetByIdAsync(TicketId);
+        _attachments = _ticket is null
+            ? []
+            : await AttachmentQueryService.GetByTicketIdAsync(TicketId);
+        _loading = false;
+    }
+
+    private static string FormatFileSize(long sizeInBytes)
+    {
+        if (sizeInBytes < 1024) return $"{sizeInBytes} B";
+        var kb = sizeInBytes / 1024d;
+        if (kb < 1024) return $"{kb:0.#} KB";
+        return $"{(kb / 1024d):0.#} MB";
+    }
+}

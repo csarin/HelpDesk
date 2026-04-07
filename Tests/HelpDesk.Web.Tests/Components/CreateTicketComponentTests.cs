@@ -220,6 +220,11 @@ public class CreateTicketComponentTests : TestContext
                 CreatedByUserId = createdByUserId
             });
         }
+
+        public Task<Ticket?> GetByIdAsync(int ticketId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<Ticket?>(null);
+        }
     }
 
     private sealed class StubAttachmentService : ITicketAttachmentService

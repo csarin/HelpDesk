@@ -176,6 +176,7 @@
     {
         <div class="status status--ok" role="status">
             Ticket creado correctamente con ID <strong>#@ViewModel.CreatedTicketId</strong>.
+            <a href="@($"/tickets/{ViewModel.CreatedTicketId}")">Ver detalle</a>
         </div>
     }
     @if (!string.IsNullOrEmpty(ViewModel.Error))

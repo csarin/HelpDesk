@@ -186,6 +186,11 @@ public class CreateTicketViewModelTests
             if (ExceptionToThrow is not null) throw ExceptionToThrow;
             return Task.FromResult(TicketToReturn);
         }
+
+        public Task<Ticket?> GetByIdAsync(int ticketId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<Ticket?>(null);
+        }
     }
 
     private sealed class StubAttachmentService : ITicketAttachmentService

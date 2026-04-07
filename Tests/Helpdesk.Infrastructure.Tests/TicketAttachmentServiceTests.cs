@@ -244,6 +244,11 @@ namespace Helpdesk.Infrastructure.Tests
                 Uploads.Add((blobName, content, contentType));
                 return Task.FromResult(new Uri("https://example.blob/" + blobName));
             }
+
+            public Task<Stream> OpenReadAsync(string blobName, CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult<Stream>(new MemoryStream([1, 2, 3]));
+            }
         }
 
         private static AppDbContext CreateInMemoryDb()

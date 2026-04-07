@@ -9,5 +9,9 @@ namespace Helpdesk.Infrastructure.Services
             byte[] content,
             string contentType,
             CancellationToken cancellationToken = default);
+
+        Task<Stream> OpenReadAsync(
+            string blobName,
+            CancellationToken cancellationToken = default);
     }
 }

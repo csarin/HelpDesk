@@ -32,5 +32,13 @@ namespace Helpdesk.Infrastructure.Services
 
             return ticket;
         }
+
+        public Task<Ticket?> GetByIdAsync(int ticketId, CancellationToken cancellationToken = default)
+        {
+            return _db.Tickets
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .FirstOrDefaultAsync(x => x.Id == ticketId, cancellationToken);
+        }
     }
 }

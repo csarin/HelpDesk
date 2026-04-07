@@ -31,11 +31,13 @@ namespace Helpdesk.Infrastructure.Tests
 
             var ticketService = provider.GetService<ITicketService>();
             var attachmentService = provider.GetService<ITicketAttachmentService>();
+            var attachmentQueryService = provider.GetService<ITicketAttachmentQueryService>();
             var blobStorage = provider.GetService<IAttachmentBlobStorage>();
             var options = provider.GetService<IOptions<AzureBlobStorageOptions>>();
 
             Assert.NotNull(ticketService);
             Assert.NotNull(attachmentService);
+            Assert.NotNull(attachmentQueryService);
             Assert.NotNull(blobStorage);
             Assert.NotNull(options);
             Assert.Equal("ticket-attachments", options!.Value.ContainerName);

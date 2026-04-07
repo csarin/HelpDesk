@@ -1,6 +1,7 @@
 using Helpdesk.Infrastructure.DependencyInjection;
 using Helpdesk.Infrastructure.Identity;
 using Helpdesk.Infrastructure.Persistence;
+using Helpdesk.Application.Services;
 using HelpDesk.Web;
 using HelpDesk.Web.ViewModels.Tickets;
 using Microsoft.AspNetCore.Identity;
@@ -66,6 +67,36 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapGet("/tickets/{ticketId:int}/attachments/{attachmentId:int}", async (
+    int ticketId,
+    int attachmentId,
+    ITicketAttachmentQueryService attachmentQueryService,
+    CancellationToken cancellationToken) =>
+{
+    var attachment = await attachmentQueryService.DownloadAsync(ticketId, attachmentId, cancellationToken);
+    if (attachment is null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.File(attachment.Content, attachment.ContentType, attachment.FileName);
+});
+
+app.MapGet("/tickets/{ticketId:int}/attachments/{attachmentId:int}/preview", async (
+    int ticketId,
+    int attachmentId,
+    ITicketAttachmentQueryService attachmentQueryService,
+    CancellationToken cancellationToken) =>
+{
+    var attachment = await attachmentQueryService.DownloadAsync(ticketId, attachmentId, cancellationToken);
+    if (attachment is null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.File(attachment.Content, attachment.ContentType);
+});
 
 await DbInitializer.InitializeAsync(app.Services);
 

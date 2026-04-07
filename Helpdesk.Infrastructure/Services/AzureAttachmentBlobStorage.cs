@@ -41,5 +41,11 @@ namespace Helpdesk.Infrastructure.Services
 
             return blobClient.Uri;
         }
+
+        public async Task<Stream> OpenReadAsync(string blobName, CancellationToken cancellationToken = default)
+        {
+            var blobClient = _container.GetBlobClient(blobName);
+            return await blobClient.OpenReadAsync(cancellationToken: cancellationToken);
+        }
     }
 }

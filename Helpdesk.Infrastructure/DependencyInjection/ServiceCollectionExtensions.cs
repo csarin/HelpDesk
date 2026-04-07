@@ -11,6 +11,7 @@ namespace Helpdesk.Infrastructure.DependencyInjection
         {
             services.AddScoped<ITicketService, Helpdesk.Infrastructure.Services.TicketService>();
             services.AddScoped<ITicketAttachmentService, TicketAttachmentService>();
+            services.AddScoped<ITicketAttachmentQueryService, TicketAttachmentQueryService>();
             services.AddSingleton<IAttachmentBlobStorage, AzureAttachmentBlobStorage>();
             services.Configure<AzureBlobStorageOptions>(configuration.GetSection(AzureBlobStorageOptions.SectionName));
             return services;

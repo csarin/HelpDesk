@@ -63,5 +63,23 @@ namespace Helpdesk.Infrastructure.Tests
             Assert.Equal("Desc", ticket.Description);
             Assert.Equal(7, ticket.CategoryId);
         }
+
+        [Fact]
+        public async Task GetById_ReturnsTicket_WhenExists()
+        {
+            await using var db = CreateInMemoryDb();
+            db.Tickets.Add(new Helpdesk.Domain.Entities.Ticket
+            {
+                Title = "T1",
+                CreatedByUserId = "user1"
+            });
+            await db.SaveChangesAsync();
+
+            var service = new TicketService(db);
+            var result = await service.GetByIdAsync(1);
+
+            Assert.NotNull(result);
+            Assert.Equal("T1", result!.Title);
+        }
     }
 }
